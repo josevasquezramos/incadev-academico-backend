@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\MaterialResource;
 use App\Http\Resources\TeachingClassSessionResource;
 use App\Http\Resources\TeachingGroupResource;
 use App\Http\Resources\TeachingGroupDetailResource;
 use Illuminate\Support\Facades\Validator;
 use IncadevUns\CoreDomain\Enums\GroupStatus;
+use IncadevUns\CoreDomain\Enums\MediaType;
 use IncadevUns\CoreDomain\Models\ClassSession;
+use IncadevUns\CoreDomain\Models\ClassSessionMaterial;
 use IncadevUns\CoreDomain\Models\Group;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
@@ -189,6 +192,40 @@ class TeachingGroupController extends Controller
                 'message' => 'Error al marcar el grupo como completado: ' . $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Listar todas las clases de un grupo específico
+     * 
+     * @param Request $request
+     * @param int $group
+     * @return JsonResponse
+     */
+    public function listClasses(Request $request, int $group): JsonResponse
+    {
+        $user = $request->user();
+
+        // Verificar que el grupo existe y que el usuario es profesor
+        $group = Group::whereHas('teachers', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->find($group);
+
+        if (!$group) {
+            return response()->json([
+                'message' => 'Grupo no encontrado o no tienes permisos para acceder a él'
+            ], 404);
+        }
+
+        // Obtener clases del grupo con paginación
+        $classes = ClassSession::with(['module', 'materials'])
+            ->where('group_id', $group->id)
+            ->orderBy('start_time', 'asc');
+
+        return response()->json([
+            'data' => TeachingClassSessionResource::collection($classes->get()),
+            
+        ]);
     }
 
     /**
@@ -401,6 +438,219 @@ class TeachingGroupController extends Controller
             
             return response()->json([
                 'message' => 'Error al eliminar la clase: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Listar todos los materiales de una clase específica
+     * 
+     * @param Request $request
+     * @param int $class
+     * @return JsonResponse
+     */
+    public function listMaterials(Request $request, int $class): JsonResponse
+    {
+        $user = $request->user();
+
+        // Verificar que la clase existe y que el usuario es profesor del grupo
+        $classSession = ClassSession::with(['group.teachers'])
+            ->whereHas('group.teachers', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->find($class);
+
+        if (!$classSession) {
+            return response()->json([
+                'message' => 'Clase no encontrada o no tienes permisos para acceder a ella'
+            ], 404);
+        }
+
+        // Obtener materiales de la clase con paginación
+        $materials = ClassSessionMaterial::where('class_session_id', $classSession->id)
+            ->orderBy('created_at', 'desc');
+
+        return response()->json([
+            'data' => MaterialResource::collection($materials->get()),
+            'class_info' => [
+                'id' => $classSession->id,
+                'title' => $classSession->title,
+                'start_time' => $classSession->start_time->toISOString(),
+            ]
+        ]);
+    }
+
+    /**
+     * Crear un nuevo material para una clase
+     * 
+     * @param Request $request
+     * @param int $class
+     * @return JsonResponse
+     */
+    public function createMaterial(Request $request, int $class): JsonResponse
+    {
+        $user = $request->user();
+
+        DB::beginTransaction();
+
+        try {
+            // Verificar que la clase existe y que el usuario es profesor del grupo
+            $classSession = ClassSession::with(['group.teachers'])
+                ->whereHas('group.teachers', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->find($class);
+
+            if (!$classSession) {
+                return response()->json([
+                    'message' => 'Clase no encontrada o no tienes permisos para acceder a ella'
+                ], 404);
+            }
+
+            // Validar los datos de entrada
+            $validator = Validator::make($request->all(), [
+                'type' => 'required|string|in:' . implode(',', MediaType::values()),
+                'material_url' => 'required|string|max:1000',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Crear el material
+            $material = ClassSessionMaterial::create([
+                'class_session_id' => $classSession->id,
+                'type' => $request->type,
+                'material_url' => $request->material_url,
+            ]);
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Material creado exitosamente',
+                'data' => new MaterialResource($material)
+            ], 201);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'message' => 'Error al crear el material: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Actualizar un material existente
+     * 
+     * @param Request $request
+     * @param int $material
+     * @return JsonResponse
+     */
+    public function updateMaterial(Request $request, int $material): JsonResponse
+    {
+        $user = $request->user();
+
+        DB::beginTransaction();
+
+        try {
+            // Verificar que el material existe y que el usuario es profesor del grupo
+            $material = ClassSessionMaterial::with(['classSession.group.teachers'])
+                ->whereHas('classSession.group.teachers', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->find($material);
+
+            if (!$material) {
+                return response()->json([
+                    'message' => 'Material no encontrado o no tienes permisos para modificarlo'
+                ], 404);
+            }
+
+            // Validar los datos de entrada
+            $validator = Validator::make($request->all(), [
+                'type' => 'sometimes|required|string|in:' . implode(',', MediaType::values()),
+                'material_url' => 'sometimes|required|string|max:1000',
+            ]);
+
+            if ($validator->fails()) {
+                return response()->json([
+                    'message' => 'Error de validación',
+                    'errors' => $validator->errors()
+                ], 422);
+            }
+
+            // Actualizar el material
+            $material->update($request->only(['type', 'material_url']));
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Material actualizado exitosamente',
+                'data' => new MaterialResource($material)
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'message' => 'Error al actualizar el material: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Eliminar un material
+     * 
+     * @param Request $request
+     * @param int $material
+     * @return JsonResponse
+     */
+    public function deleteMaterial(Request $request, int $material): JsonResponse
+    {
+        $user = $request->user();
+
+        DB::beginTransaction();
+
+        try {
+            // Verificar que el material existe y que el usuario es profesor del grupo
+            $material = ClassSessionMaterial::with(['classSession.group.teachers'])
+                ->whereHas('classSession.group.teachers', function ($query) use ($user) {
+                    $query->where('user_id', $user->id);
+                })
+                ->find($material);
+
+            if (!$material) {
+                return response()->json([
+                    'message' => 'Material no encontrado o no tienes permisos para eliminarlo'
+                ], 404);
+            }
+
+            // Verificar si la clase ya ha ocurrido (opcional - depende de tus reglas de negocio)
+            if ($material->classSession->start_time->isPast()) {
+                // Puedes decidir si permitir eliminar materiales de clases pasadas
+                // return response()->json([
+                //     'message' => 'No se puede eliminar material de una clase que ya ha ocurrido'
+                // ], 422);
+            }
+
+            // Eliminar el material
+            $material->delete();
+
+            DB::commit();
+
+            return response()->json([
+                'message' => 'Material eliminado exitosamente'
+            ]);
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            
+            return response()->json([
+                'message' => 'Error al eliminar el material: ' . $e->getMessage()
             ], 500);
         }
     }

@@ -21,6 +21,7 @@ class TeachingClassSessionResource extends JsonResource
             'end_time' => $this->end_time->toISOString(),
             'meet_url' => $this->meet_url,
             'materials' => MaterialResource::collection($this->whenLoaded('materials')),
+            'module' => new TeachingModuleResource($this->whenLoaded('module')),
             'created_at' => $this->created_at->toISOString(),
         ];
     }
