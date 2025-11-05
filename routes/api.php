@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AvailableGroupController;
 use App\Http\Controllers\Api\EnrolledGroupController;
 use App\Http\Controllers\Api\EnrollmentController;
+use App\Http\Controllers\Api\TeachingGroupController;
 use Illuminate\Support\Facades\Route;
 
 // TODO: Borrar y usar el endpoint de Johan para el login
@@ -25,5 +26,13 @@ Route::middleware('auth:sanctum')->group(function () {
             ->name('api.enrolled-groups.index');
         Route::get('{group}', [EnrolledGroupController::class, 'show'])
             ->name('api.enrolled-groups.show');
+    });
+
+    Route::prefix('teaching-groups')->group(function () {
+
+        Route::get('/', [TeachingGroupController::class, 'index']);
+        Route::get('{group}', [TeachingGroupController::class, 'show']);
+        // TODO: Generar notas finales y certificados
+        Route::post('{group}/complete', [TeachingGroupController::class, 'markAsCompleted']);
     });
 });
