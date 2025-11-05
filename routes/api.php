@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AvailableGroupController;
+use App\Http\Controllers\Api\EnrolledGroupController;
 use App\Http\Controllers\Api\EnrollmentController;
 use Illuminate\Support\Facades\Route;
 
@@ -13,7 +14,16 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::prefix('available-groups')->group(function () {
-        Route::get('/', [AvailableGroupController::class, 'index']);
-        Route::post('{group}/enroll', [EnrollmentController::class, 'enroll']);
+        Route::get('/', [AvailableGroupController::class, 'index'])
+            ->name('api.available-groups.index');
+        Route::post('{group}/enroll', [EnrollmentController::class, 'enroll'])
+            ->name('api.groups.enroll');
+    });
+
+    Route::prefix('enrolled-groups')->group(function () {
+        Route::get('/', [EnrolledGroupController::class, 'index'])
+            ->name('api.enrolled-groups.index');
+        Route::get('{group}', [EnrolledGroupController::class, 'show'])
+            ->name('api.enrolled-groups.show');
     });
 });
