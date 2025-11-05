@@ -34,5 +34,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('{group}', [TeachingGroupController::class, 'show']);
         // TODO: Generar notas finales y certificados
         Route::post('{group}/complete', [TeachingGroupController::class, 'markAsCompleted']);
+
+        Route::post('{group}/modules/{module}/classes', [TeachingGroupController::class, 'createClass']);
+        Route::put('classes/{class}', [TeachingGroupController::class, 'updateClass']);
+        Route::delete('classes/{class}', [TeachingGroupController::class, 'deleteClass']);
     });
 });
