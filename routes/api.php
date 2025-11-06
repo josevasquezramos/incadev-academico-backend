@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AvailableGroupController;
 use App\Http\Controllers\Api\EnrolledGroupController;
@@ -53,5 +54,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('exams/{exam}', [ExamController::class, 'deleteExam']);
         Route::post('exams/{exam}/grades', [ExamController::class, 'recordGrades']);
         Route::put('grades/{grade}', [ExamController::class, 'updateGrade']);
+
+        Route::get('{group}/attendances', [AttendanceController::class, 'index']);
+        Route::get('classes/{class}/attendances', [AttendanceController::class, 'show']);
+        Route::post('classes/{class}/attendances', [AttendanceController::class, 'recordAttendances']);
+        Route::put('attendances/{attendance}', [AttendanceController::class, 'updateAttendance']);
+        Route::get('{group}/attendance-statistics', [AttendanceController::class, 'getGroupStatistics']);
     });
 });

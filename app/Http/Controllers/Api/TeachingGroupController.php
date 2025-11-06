@@ -10,6 +10,8 @@ use App\Http\Resources\TeachingGroupDetailResource;
 use Illuminate\Support\Facades\Validator;
 use IncadevUns\CoreDomain\Enums\GroupStatus;
 use IncadevUns\CoreDomain\Enums\MediaType;
+use IncadevUns\CoreDomain\Enums\PaymentStatus;
+use IncadevUns\CoreDomain\Enums\EnrollmentAcademicStatus;
 use IncadevUns\CoreDomain\Models\ClassSession;
 use IncadevUns\CoreDomain\Models\ClassSessionMaterial;
 use IncadevUns\CoreDomain\Models\Group;
@@ -36,8 +38,8 @@ class TeachingGroupController extends Controller
                 'courseVersion.course',
                 'teachers',
                 'enrollments' => function($query) {
-                    $query->where('payment_status', \IncadevUns\CoreDomain\Enums\PaymentStatus::Paid)
-                          ->where('academic_status', \IncadevUns\CoreDomain\Enums\EnrollmentAcademicStatus::Active);
+                    $query->where('payment_status', PaymentStatus::Paid)
+                          ->where('academic_status', EnrollmentAcademicStatus::Active);
                 }
             ])
             ->whereHas('teachers', function ($query) use ($user) {
@@ -88,7 +90,7 @@ class TeachingGroupController extends Controller
         $courseVersionId = $group->course_version_id;
 
         // Cargar módulos del course_version con todas sus relaciones
-        $modules = \IncadevUns\CoreDomain\Models\Module::where('course_version_id', $courseVersionId)
+        $modules = Module::where('course_version_id', $courseVersionId)
             ->with([
                 // Cargar clases del grupo actual con materiales
                 'classSessions' => function ($query) use ($group) {
@@ -108,8 +110,8 @@ class TeachingGroupController extends Controller
         // Cargar estudiantes matriculados activos
         $students = $group->enrollments()
             ->with(['user'])
-            ->where('payment_status', \IncadevUns\CoreDomain\Enums\PaymentStatus::Paid)
-            ->where('academic_status', \IncadevUns\CoreDomain\Enums\EnrollmentAcademicStatus::Active)
+            ->where('payment_status', PaymentStatus::Paid)
+            ->where('academic_status', EnrollmentAcademicStatus::Active)
             ->get()
             ->map(function ($enrollment) {
                 return [
