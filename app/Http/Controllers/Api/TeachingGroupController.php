@@ -7,6 +7,7 @@ use App\Http\Resources\MaterialResource;
 use App\Http\Resources\TeachingClassSessionResource;
 use App\Http\Resources\TeachingGroupResource;
 use App\Http\Resources\TeachingGroupDetailResource;
+use App\Services\GroupCompletionService;
 use Illuminate\Support\Facades\Validator;
 use IncadevUns\CoreDomain\Enums\GroupStatus;
 use IncadevUns\CoreDomain\Enums\MediaType;
@@ -22,6 +23,13 @@ use IncadevUns\CoreDomain\Models\Module;
 
 class TeachingGroupController extends Controller
 {
+    protected $completionService;
+
+    public function __construct(GroupCompletionService $completionService)
+    {
+        $this->completionService = $completionService;
+    }
+
     /**
      * Lista los grupos donde el usuario es profesor
      * 
@@ -133,7 +141,37 @@ class TeachingGroupController extends Controller
     }
 
     /**
-     * Marcar un grupo como completado
+     * Verificar si un grupo puede ser completado
+     * 
+     * @param Request $request
+     * @param int $group
+     * @return JsonResponse
+     */
+    public function canCompleteGroup(Request $request, int $group): JsonResponse
+    {
+        $user = $request->user();
+
+        // Verificar que el grupo existe y que el usuario es profesor
+        $group = Group::whereHas('teachers', function ($query) use ($user) {
+                $query->where('user_id', $user->id);
+            })
+            ->find($group);
+
+        if (!$group) {
+            return response()->json([
+                'message' => 'Grupo no encontrado o no tienes permisos para acceder a él'
+            ], 404);
+        }
+
+        $validation = $this->completionService->canCompleteGroup($group);
+
+        return response()->json([
+            'data' => $validation
+        ]);
+    }
+
+    /**
+     * Marcar un grupo como completado y generar resultados/certificados
      * 
      * @param Request $request
      * @param int $group
@@ -143,11 +181,10 @@ class TeachingGroupController extends Controller
     {
         $user = $request->user();
 
-        DB::beginTransaction();
-
         try {
             // Verificar que el grupo existe y que el usuario es profesor
-            $group = Group::whereHas('teachers', function ($query) use ($user) {
+            $group = Group::with(['courseVersion.course', 'classSessions', 'exams'])
+                ->whereHas('teachers', function ($query) use ($user) {
                     $query->where('user_id', $user->id);
                 })
                 ->find($group);
@@ -171,27 +208,38 @@ class TeachingGroupController extends Controller
                 ], 422);
             }
 
-            // Actualizar el estado del grupo
-            $group->update([
-                'status' => GroupStatus::Completed
-            ]);
+            // Verificar requisitos previos
+            $canComplete = $this->completionService->canCompleteGroup($group);
+            if (!$canComplete['can_complete']) {
+                return response()->json([
+                    'message' => 'No se puede completar el grupo. Verifica que tenga estudiantes y clases.',
+                    'validation' => $canComplete
+                ], 422);
+            }
 
-            DB::commit();
+            // Completar el grupo y generar resultados
+            $completionResult = $this->completionService->completeGroup($group);
 
             return response()->json([
-                'message' => 'Grupo marcado como completado exitosamente',
+                'message' => 'Grupo marcado como completado exitosamente. Resultados y certificados generados.',
                 'data' => [
-                    'id' => $group->id,
-                    'name' => $group->name,
-                    'status' => $group->status->value
+                    'group' => [
+                        'id' => $group->id,
+                        'name' => $group->name,
+                        'status' => $group->status->value
+                    ],
+                    'completion_summary' => [
+                        'total_students' => $completionResult['total_students'],
+                        'certificates_generated' => $completionResult['certificates_generated'],
+                        'academic_settings_used' => $completionResult['academic_settings_used'],
+                    ],
+                    'student_results' => $completionResult['results']
                 ]
             ]);
 
         } catch (\Exception $e) {
-            DB::rollBack();
-            
             return response()->json([
-                'message' => 'Error al marcar el grupo como completado: ' . $e->getMessage()
+                'message' => 'Error al completar el grupo: ' . $e->getMessage()
             ], 500);
         }
     }

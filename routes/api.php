@@ -34,7 +34,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/', [TeachingGroupController::class, 'index']);
         Route::get('{group}', [TeachingGroupController::class, 'show']);
-        // TODO: Generar notas finales y certificados
+
+        Route::get('{group}/can-complete', [TeachingGroupController::class, 'canCompleteGroup']);
         Route::post('{group}/complete', [TeachingGroupController::class, 'markAsCompleted']);
 
         Route::get('{group}/classes', [TeachingGroupController::class, 'listClasses']);
