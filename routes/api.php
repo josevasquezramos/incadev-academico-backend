@@ -6,6 +6,8 @@ use App\Http\Controllers\Api\AvailableGroupController;
 use App\Http\Controllers\Api\EnrolledGroupController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\ExamController;
+use App\Http\Controllers\Api\StudentCertificateController;
+use App\Http\Controllers\Api\StudentGroupController;
 use App\Http\Controllers\Api\TeachingGroupController;
 use Illuminate\Support\Facades\Route;
 
@@ -61,5 +63,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('classes/{class}/attendances', [AttendanceController::class, 'recordAttendances']);
         Route::put('attendances/{attendance}', [AttendanceController::class, 'updateAttendance']);
         Route::get('{group}/attendance-statistics', [AttendanceController::class, 'getGroupStatistics']);
+    });
+
+    Route::prefix('student')->group(function () {
+        Route::get('/completed-groups', [StudentGroupController::class, 'completedGroups']);
+        Route::get('/certificates/{uuid}/download', [StudentGroupController::class, 'downloadCertificate']);
     });
 });
