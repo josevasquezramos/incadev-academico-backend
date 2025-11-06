@@ -1,66 +1,331 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# Procesos Académicos Incadev
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+Este repositorio contiene el backend de la aplicación que gestiona los procesos académicos de [Incadev](https://github.com/incadev-uns). Este proyecto depende del paquete [incadev-uns/core-domain](https://github.com/incadev-uns/core-domain). Las migraciones, modelos y el seeder principal están en ese paquete.
 
-## About Laravel
+## ⚙️ Requisitos
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+- PHP ^8.2
+- Composer
+- MySQL / PostgreSQL u otra BD (activar su driver o extenión)
+- ImageMagick (requerido para la generación de QR en certificados)
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🚀 Instalación
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+### 1. Clonar el repositorio
 
-## Learning Laravel
+```bash
+git clone https://github.com/josevasquezramos/incadev-academico-backend.git
+cd incadev-academico-backend
+```
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+### 2. Instalar dependencias
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+```bash
+composer install
+```
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 3. Copiar archivo de entorno
 
-## Laravel Sponsors
+```bash
+cp .env.example .env
+```
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 4. Generar APP_KEY
 
-### Premium Partners
+```bash
+php artisan key:generate
+```
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+### 5. Configurar variables de entorno
 
-## Contributing
+Edita .env y configura las variables de entorno necesarias.
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### 6. Ejecutar migraciones
 
-## Code of Conduct
+```bash
+php artisan migrate
+```
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+### 7. Ejecutar seeders del paquete
 
-## Security Vulnerabilities
+```bash
+php artisan db:seed --class="IncadevUns\CoreDomain\Database\Seeders\IncadevSeeder"
+```
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+### 8. Levantar servidor
 
-## License
+```bash
+php artisan serve --host=127.0.0.1 --port=8000
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+## 📘 Documentación de endpoints
+
+### 1. Matrículas
+
+Este módulo gestiona el proceso de inscripción de alumnos en grupos disponibles. Permite listar los grupos abiertos a matrícula y registrar una nueva matrícula junto con los datos del pago realizado.
+
+#### 1.1. Listar grupos disponibles
+
+Obtiene todos los grupos disponibles para matrícula.
+
+> **GET** `/api/available-groups`
+
+#### 1.2. Matricularse en un grupo
+
+Registra la matrícula de un usuario en un grupo y guarda el pago.
+
+> **POST** `/api/available-groups/{group}/enroll`
+
+Body (JSON):
+
+```json
+{
+    "operation_number": "OP-123456789",
+    "agency_number": "AG-001",
+    "operation_date": "2024-01-15",
+    "amount": 500.00,
+    "evidence_path": "recibo.jpg"
+}
+```
+
+### 2. Alumno
+
+El módulo del alumno agrupa todas las funcionalidades relacionadas con la experiencia del estudiante dentro de la plataforma. Permite consultar los grupos en los que el alumno está matriculado, revisar los detalles de cada grupo (módulos, clases, materiales, exámenes, asistencias y notas).
+
+#### 2.1. Grupos matriculados
+
+Devuelve todos los grupos en los que el usuario está matriculado.
+
+> **GET** `/api/enrolled-groups`
+
+#### 2.2. Detalle de un grupo
+
+Muestra información completa del grupo: módulos, clases, materiales, exámenes, asistencias y notas del alumno.
+
+> **GET** `/api/enrolled-groups/{group}`
+
+### 3. Profesor
+
+Este módulo permite a los docentes gestionar los grupos que enseñan y todas las entidades asociadas: clases, materiales, exámenes y asistencias. Provee herramientas para crear y editar clases, cargar materiales, planificar y calificar exámenes, registrar asistencias y completar grupos cuando cumplan los requisitos académicos.
+
+#### 3.1. Gestión de grupos
+
+##### Mis grupos
+
+> **GET** `/api/teaching-groups`
+
+Devuelve todos los grupos en los que el usuario es profesor.
+
+##### Detalle de un grupo
+
+> **GET** `/api/teaching-groups/{group}`
+
+Muestra toda la información del grupo (módulos, clases, exámenes, etc.).
+
+##### Verificar si un grupo puede completarse
+
+> **GET** `/api/teaching-groups/{group}/can-complete`
+
+Devuelve si el grupo cumple las condiciones para ser completado (todas las clases y exámenes calificados, asistencias y notas registradas).
+
+##### Completar un grupo
+
+> **POST** `/api/teaching-groups/{group}/complete`
+
+Finaliza un grupo, genera notas finales y certificados.
+
+#### 3.2. Gestión de clases
+
+##### Obtener clases
+
+> **GET** `/api/teaching-groups/{group}/classes`
+
+Lista todas las clases del grupo.
+
+##### Registrar clase
+
+> **POST** `/api/teaching-groups/{group}/modules/{module}/classes`
+
+Crea una clase nueva para un determinado módulo.
+
+```json
+{
+  "title": "Clase introductoria",
+  "start_time": "2025-11-15 10:00:00",
+  "end_time": "2025-11-15 12:00:00",
+  "meet_url": "https://meet.google.com/abc-def-ghi"
+}
+```
+
+##### Editar clase
+
+> **PUT** `/api/teaching-groups/classes/{class}`
+
+Actualiza una clase. El body es el mismo que el de registrar.
+
+##### Eliminar clase
+
+> **DELETE** `/api/teaching-groups/classes/{class}`
+
+Elimina una clase (solo el profesor autorizado puede hacerlo).
+
+#### 3.3. Gestión de materiales
+
+##### Obtener materiales
+
+> **GET** `/api/teaching-groups/classes/{class}/materials`
+
+Lista materiales de una clase.
+
+##### Registrar material
+
+> **POST** `/api/teaching-groups/classes/{class}/materials`
+
+Crea un material.
+
+```json
+{
+  "type": "video",
+  "material_url": "https://youtube.com/watch?v=abc123"
+}
+```
+
+##### Editar material
+
+> **PUT** `/api/teaching-groups/materials/{material}`
+
+Actualiza un material.
+
+##### Eliminar material
+
+> **DELETE** `/api/teaching-groups/materials/{material}`
+
+Elimina un material.
+
+#### 3.4. Gestión de exámenes
+
+##### Obtener exámenes
+
+> **GET** `/api/teaching-groups/{group}/exams`
+
+Lista exámenes de un grupo.
+
+##### Registrar examen
+
+> **POST** `/api/teaching-groups/{group}/modules/{module}/exams`
+
+Crea un examen para un determinado módulo.
+
+```json
+{
+  "title": "Examen final",
+  "start_time": "2025-12-15 10:00:00",
+  "end_time": "2025-12-15 12:00:00",
+  "exam_url": "https://google.forms.com/exams"
+}
+```
+
+##### Obtener examen en específico
+
+> **GET** `/api/teaching-groups/exams/{exam}`
+
+Muestra información necesaria para el siguiente endpoint (enrollment_id).
+
+##### Registro masivo
+
+> **POST** `/api/teaching-groups/exams/{exam}/grades`
+
+Registro masivo de notas. Se puede usar este mismo método y body para actualizar masivamente.
+
+```json
+{
+  "grades": [
+    { "enrollment_id": 1, "grade": 16.5, "feedback": "Buen trabajo" },
+    { "enrollment_id": 2, "grade": 8.0, "feedback": "Debe mejorar" }
+  ]
+}
+```
+
+##### Editar nota
+
+> **PUT** `/api/teaching-groups/grades/{grade}`
+
+De ser necesario edita una nota individual.
+
+```json
+{
+    "grade": 17.0,
+    "feedback": "Nota corregida"
+}
+```
+
+##### Eliminar examen
+
+> **DELETE** `/api/teaching-groups/exams/{exam}`
+
+Elimina un examen.
+
+#### 3.5. Gestión de asistencias
+
+##### Obtener asistencias
+
+> **GET** `/api/teaching-groups/{group}/attendances`
+
+Lista todas las clases de un grupo.
+
+##### Obtener listado específico
+
+> **GET** `/api/teaching-groups/classes/{class}/attendances`
+
+Muestra los alumnos de una clase con sus estados de asistencia.
+
+##### Registro masivo
+
+> **POST** `/api/teaching-groups/classes/{class}/attendances`
+
+Registro masivo de asistencias.
+
+```json
+{
+  "attendances": [
+    { "enrollment_id": 1, "status": "present" },
+    { "enrollment_id": 2, "status": "late" },
+    { "enrollment_id": 3, "status": "absent" },
+    { "enrollment_id": 4, "status": "excused" },
+  ]
+}
+```
+
+##### Editar asistencia
+
+> **PUT** `/api/teaching-groups/attendances/{attendance}`
+
+Edita asistencia individual.
+
+```json
+{
+    "status": "present"
+}
+```
+
+##### Estadísticas
+
+> **GET** `/api/teaching-groups/{group}/attendance-statistics`
+
+Devuelve estadísticas de asistencia por grupo.
+
+### 4. Certificados
+
+El módulo de certificados gestiona la emisión y descarga de certificados digitales generados al completar satisfactoriamente un grupo o curso. Estos certificados se generan automáticamente al completar un grupo desde el módulo del profesor y están disponibles para el alumno en formato PDF.
+
+#### Obtener grupos finalizados
+
+> **GET** `/api/student/completed-groups`
+
+Lista de grupos finalizados con enlaces a certificados.
+
+#### Descargar certificado
+
+> **GET** `/api/student/certificates/{uuid}/download`
+
+Descarga el certificado en formato PDF.
