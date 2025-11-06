@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\AvailableGroupController;
 use App\Http\Controllers\Api\EnrolledGroupController;
 use App\Http\Controllers\Api\EnrollmentController;
+use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\TeachingGroupController;
 use Illuminate\Support\Facades\Route;
 
@@ -44,5 +45,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('classes/{class}/materials', [TeachingGroupController::class, 'createMaterial']);
         Route::put('materials/{material}', [TeachingGroupController::class, 'updateMaterial']);
         Route::delete('materials/{material}', [TeachingGroupController::class, 'deleteMaterial']);
+
+        Route::get('{group}/exams', [ExamController::class, 'index']);
+        Route::post('{group}/modules/{module}/exams', [ExamController::class, 'createExam']);
+        Route::get('exams/{exam}', [ExamController::class, 'show']);
+        Route::put('exams/{exam}', [ExamController::class, 'updateExam']);
+        Route::delete('exams/{exam}', [ExamController::class, 'deleteExam']);
+        Route::post('exams/{exam}/grades', [ExamController::class, 'recordGrades']);
+        Route::put('grades/{grade}', [ExamController::class, 'updateGrade']);
     });
 });

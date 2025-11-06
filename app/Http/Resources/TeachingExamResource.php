@@ -20,6 +20,7 @@ class TeachingExamResource extends JsonResource
             'start_time' => $this->start_time->toISOString(),
             'end_time' => $this->end_time->toISOString(),
             'exam_url' => $this->exam_url,
+            'module' => ModuleDetailResource::make($this->module),
             'created_at' => $this->created_at->toISOString(),
         ];
     }
