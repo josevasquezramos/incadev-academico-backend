@@ -6,8 +6,8 @@ use App\Http\Controllers\Api\AvailableGroupController;
 use App\Http\Controllers\Api\EnrolledGroupController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\ExamController;
-use App\Http\Controllers\Api\StudentCertificateController;
 use App\Http\Controllers\Api\StudentGroupController;
+use App\Http\Controllers\Api\TeacherStatisticsController;
 use App\Http\Controllers\Api\TeachingGroupController;
 use Illuminate\Support\Facades\Route;
 
@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 Route::post('/auth/login', [AuthController::class, 'login']);
 
 Route::middleware('auth:sanctum')->group(function () {
-    
+
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::prefix('available-groups')->group(function () {
@@ -68,5 +68,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('student')->group(function () {
         Route::get('/completed-groups', [StudentGroupController::class, 'completedGroups']);
         Route::get('/certificates/{uuid}/download', [StudentGroupController::class, 'downloadCertificate']);
+    });
+
+    Route::prefix('administrative')->middleware(['auth:sanctum'])->group(function () {
+        Route::get('teachers/{user}/groups', [TeacherStatisticsController::class, 'index']);
+        Route::get('groups/{group}/statistics', [TeacherStatisticsController::class, 'show']);
     });
 });

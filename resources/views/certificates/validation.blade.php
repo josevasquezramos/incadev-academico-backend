@@ -309,17 +309,6 @@
                         <li>El enlace de verificación está incompleto o dañado</li>
                     </ul>
                 </div>
-                
-                <div class="divider"></div>
-                
-                <div class="info-section">
-                    <div class="info-label">¿Necesitas ayuda?</div>
-                    <p style="font-size: 14px; color: #000; line-height: 1.6; margin-top: 8px;">
-                        Si crees que esto es un error, por favor contacta con el 
-                        <strong>Instituto de Capacitación INCADEV</strong> 
-                        proporcionando el código de verificación del certificado.
-                    </p>
-                </div>
             </div>
             
             <div class="footer">
