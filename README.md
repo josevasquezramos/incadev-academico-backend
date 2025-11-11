@@ -58,6 +58,52 @@ php artisan db:seed --class="IncadevUns\CoreDomain\Database\Seeders\IncadevSeede
 php artisan serve --host=127.0.0.1 --port=8000
 ```
 
+## 📝 Registro y Consulta DNI
+
+### 1. Configuración Requerida
+
+Antes de utilizar los endpoints de este módulo de forma **local**, es fundamental configurar el acceso al servicio externo de consulta de DNI. Este proyecto utiliza apiperu.dev para validar números de DNI y autocompletar los nombres de los usuarios. Puede obtener su propio API Token registrándose en [apiperu.dev](https://apiperu.dev/).
+
+Una vez que tengas tu token personal, debes añadirlo a tu archivo de variables de entorno .env (del proyecto que consumirá esta API) con el siguiente nombre:
+
+```
+APIPERU_TOKEN=[tu_token_obtenido_de_apiperu.dev]
+```
+
+### 2. Endpoints del Módulo
+
+#### 2.1. Registrar un nuevo usuario
+
+Crea una nueva cuenta de usuario. Este endpoint valida el DNI proporcionado contra el servicio externo (apiperu.dev) para autocompletar el nombre completo (fullname) del usuario. Si el registro es exitoso, devuelve los datos del usuario y un token de autenticación (Sanctum) para iniciar sesión.
+
+> **POST** `/api/auth/register`
+
+Body (JSON):
+
+```json
+{
+    "name": "Nombre",
+    "email": "nombre@ejemplo.com",
+    "password": "passwordSeguro123",
+    "password_confirmation": "passwordSeguro123",
+    "dni": "12345678"
+}
+```
+
+#### 2.3. Consultar nombre por DNI
+
+Endpoint público que permite obtener el nombre completo de una persona a partir de su número de DNI. Utiliza el servicio de apiperu.dev para la consulta.
+
+> **POST** `/api/get-fullname-by-dni`
+
+Body (JSON):
+
+```json
+{
+    "dni": "87654321"
+}
+```
+
 ## 📘 Documentación de endpoints
 
 ### 1. Matrículas
