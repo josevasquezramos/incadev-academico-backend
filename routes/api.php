@@ -14,6 +14,10 @@ use Illuminate\Support\Facades\Route;
 // TODO: Borrar y usar el endpoint de Johan para el login
 Route::post('/auth/login', [AuthController::class, 'login']);
 
+Route::post('/auth/register', [AuthController::class, 'register']);
+
+Route::post('/get-fullname-by-dni', [AuthController::class, 'getFullnameByDni']);
+
 Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
