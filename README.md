@@ -329,3 +329,58 @@ Lista de grupos finalizados con enlaces a certificados.
 > **GET** `/api/student/certificates/{uuid}/download`
 
 Descarga el certificado en formato PDF.
+
+### 5. Estadísticas Administrativas
+
+El módulo de estadísticas administrativas ofrece endpoints para que recursos humanos acceda a información detallada sobre los grupos que los docentes enseñan, requiriendo permisos especiales.
+
+#### Obtener grupos de un profesor
+
+> **GET** `/api/administrative/teachers/{user}/groups`
+
+Obtiene la lista de grupos asignados a un profesor específico con información básica y filtros por fechas.
+
+Parámetros de consulta:
+
+- `start_date_from` (opcional): Fecha de inicio mínima (YYYY-MM-DD)
+- `start_date_to` (opcional): Fecha de inicio máxima (YYYY-MM-DD)
+- `end_date_from` (opcional): Fecha de fin mínima (YYYY-MM-DD)
+- `end_date_to` (opcional): Fecha de fin máxima (YYYY-MM-DD)
+- `per_page` (opcional): Número de resultados por página (default: 15)
+
+Requisitos de permisos:
+
+- Usuario autenticado debe tener rol `human_resources`
+- El `{user}` debe tener rol `teacher`
+
+#### Obtener estadísticas detalladas de un grupo
+
+> **GET** `/api/administrative/groups/{group}/statistics`
+
+Proporciona estadísticas completas y detalladas de un grupo específico, incluyendo métricas académicas, financieras, de asistencia y matriculaciones.
+
+Descripción de campos estadísticos:
+
+- Academic
+  - `class_sessions_count`: Número total de sesiones de clase realizadas
+  - `average_materials_per_class`: Promedio de materiales subidos por sesión
+  - `exams_count`: Número total de exámenes realizados
+  - `grades_average`: Promedio general de notas de todos los estudiantes
+
+- Financial
+  - `course_price`: Precio establecido para la versión del curso
+  - `expected_money`: Ingreso esperado (precio × total matriculados)
+  - `received_money`: Ingreso real recibido (suma de pagos aprobados)
+  - `payment_completion_rate`: Porcentaje de pago completado (recibido/esperado × 100)
+
+- Attendance
+  - `total_sessions`: Número de sesiones únicas de clase
+  - `total_attendance_records`: Total de registros de asistencia (sesiones × estudiantes)
+  - `present_count`: Número de asistencias marcadas como "present"
+  - `attendance_average`: Porcentaje promedio de asistencia
+
+- Enrollments
+  - `total_students`: Número total de estudiantes matriculados
+  - `paid_students`: Número de estudiantes con pago completado
+  - `approved_students`: Número de estudiantes que aprobaron el curso (según enrollment_results)
+  - `approval_rate`: Porcentaje de estudiantes aprobados
