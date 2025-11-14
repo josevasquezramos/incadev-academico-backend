@@ -364,13 +364,13 @@ Devuelve estadísticas de asistencia por grupo.
 
 El módulo de certificados gestiona la emisión y descarga de certificados digitales generados al completar satisfactoriamente un grupo o curso. Estos certificados se generan automáticamente al completar un grupo desde el módulo del profesor y están disponibles para el alumno en formato PDF.
 
-#### Obtener grupos finalizados
+#### 4.1. Obtener grupos finalizados
 
 > **GET** `/api/student/completed-groups`
 
 Lista de grupos finalizados con enlaces a certificados.
 
-#### Descargar certificado
+#### 4.2. Descargar certificado
 
 > **GET** `/api/student/certificates/{uuid}/download`
 
@@ -380,7 +380,7 @@ Descarga el certificado en formato PDF.
 
 El módulo de estadísticas administrativas ofrece endpoints para que recursos humanos acceda a información detallada sobre los grupos que los docentes enseñan, requiriendo permisos especiales.
 
-#### Obtener grupos de un profesor
+#### 5.1. Obtener grupos de un profesor
 
 > **GET** `/api/administrative/teachers/{user}/groups`
 
@@ -399,7 +399,7 @@ Requisitos de permisos:
 - Usuario autenticado debe tener rol `human_resources`
 - El `{user}` debe tener rol `teacher`
 
-#### Obtener estadísticas detalladas de un grupo
+#### 5.2. Obtener estadísticas detalladas de un grupo
 
 > **GET** `/api/administrative/groups/{group}/statistics`
 
@@ -430,3 +430,23 @@ Descripción de campos estadísticos:
   - `paid_students`: Número de estudiantes con pago completado
   - `approved_students`: Número de estudiantes que aprobaron el curso (según enrollment_results)
   - `approval_rate`: Porcentaje de estudiantes aprobados
+
+### 6. Reportes de grupos en Excel
+
+#### 6.1. Reporte de matrículas
+
+> **GET** `/api/export/{group}/enrollments`
+
+Genera un Excel con el listado de estudiantes matriculados en el grupo. Incluye DNI, nombre completo, email, estado académico, estado de pago y fecha de matrícula.
+
+#### 6.2. Reporte de asistencias
+
+> **GET** `/api/export/{group}/attendances`
+
+Genera un Excel con el registro de asistencias del grupo. Incluye: datos del alumno, asistencia por cada sesión de clase (P=Presente, A=Ausente, T=Tardanza, J=Justificado) y porcentaje total de asistencia.
+
+#### 6.3. Reporte de calificaciones
+
+> **GET** `/api/export/{group}/grades`
+
+Genera un Excel con las calificaciones del grupo. Incluye: datos del alumno, notas por cada examen organizadas por módulos y nota final del curso.
