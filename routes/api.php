@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AvailableGroupController;
 use App\Http\Controllers\Api\EnrolledGroupController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\ExamController;
+use App\Http\Controllers\Api\ExportController;
 use App\Http\Controllers\Api\StudentGroupController;
 use App\Http\Controllers\Api\TeacherStatisticsController;
 use App\Http\Controllers\Api\TeachingGroupController;
@@ -77,5 +78,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('administrative')->middleware(['auth:sanctum'])->group(function () {
         Route::get('teachers/{user}/groups', [TeacherStatisticsController::class, 'index']);
         Route::get('groups/{group}/statistics', [TeacherStatisticsController::class, 'show']);
+    });
+
+    Route::prefix('export')->group(function () {
+        Route::get('/{group}/enrollments', [ExportController::class, 'exportEnrollments']);
+        Route::get('/{group}/attendances', [ExportController::class, 'exportAttendances']);
+        Route::get('/{group}/grades', [ExportController::class, 'exportGrades']);
     });
 });

@@ -180,7 +180,7 @@ class AuthController extends Controller
                 $data = $response->json('data');
 
                 // Concatenamos los nombres y apellidos
-                $fullname = trim($data['nombres'] . ' ' . $data['apellido_paterno'] . ' ' . $data['apellido_materno']);
+                $fullname = trim($data['apellido_paterno'] . ' ' . $data['apellido_materno'] . ' ' . $data['nombres']);
 
                 return $fullname;
             }
