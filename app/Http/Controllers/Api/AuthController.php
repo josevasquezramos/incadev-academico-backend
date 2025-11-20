@@ -109,6 +109,8 @@ class AuthController extends Controller
             'fullname' => $fullname,
         ]);
 
+        $user->assignRole('student');
+
         // 4. Generar un token (usando Sanctum, ya que vi 'HasApiTokens' en tu modelo)
         $token = $user->createToken('auth_token')->plainTextToken;
 
