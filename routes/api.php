@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\EnrolledGroupController;
 use App\Http\Controllers\Api\EnrollmentController;
 use App\Http\Controllers\Api\ExamController;
 use App\Http\Controllers\Api\ExportController;
+use App\Http\Controllers\Api\MarketingController;
 use App\Http\Controllers\Api\StudentGroupController;
 use App\Http\Controllers\Api\TeacherStatisticsController;
 use App\Http\Controllers\Api\TeachingGroupController;
@@ -75,9 +76,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/certificates/{uuid}/download', [StudentGroupController::class, 'downloadCertificate']);
     });
 
-    Route::prefix('administrative')->middleware(['auth:sanctum'])->group(function () {
+    Route::prefix('administrative')->group(function () {
         Route::get('teachers/{user}/groups', [TeacherStatisticsController::class, 'index']);
         Route::get('groups/{group}/statistics', [TeacherStatisticsController::class, 'show']);
+    });
+
+    Route::prefix('marketing')->group(function () {
+        Route::get('/students', [MarketingController::class, 'students']);
     });
 
     Route::prefix('export')->group(function () {
