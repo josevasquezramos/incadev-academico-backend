@@ -35,7 +35,7 @@ class SocialiteController extends Controller
                 // Actualizamos avatar si ha cambiado, o nombre si quieres mantenerlo sincronizado
                 $user->update([
                     'avatar' => $user->avatar ?? $googleUser->getAvatar(),
-                    'fullname' => $googleUser->getName(),
+                    'name' => $googleUser->getName(),
                 ]);
             } else {
                 // --- REGISTRO (Usuario nuevo) ---
@@ -54,27 +54,42 @@ class SocialiteController extends Controller
             // 2. Crear Token Sanctum
             $token = $user->createToken('auth_token_google')->plainTextToken;
 
-            // 3. Respuesta JSON para tu prueba en navegador
-            return response()->json([
-                'status' => '¡ÉXITO! Usuario autenticado con modelo actualizado.',
-                'action' => $user->wasRecentlyCreated ? 'Registro Nuevo' : 'Login Existente',
+            // 3. Preparar datos para el Frontend
+            $frontendData = [
+                'token' => $token,
                 'user' => [
                     'id' => $user->id,
                     'name' => $user->name,
                     'email' => $user->email,
                     'avatar' => $user->avatar,
-                ],
-                'token' => $token
-            ]);
+                    'role' => $user->getRoleNames()->first()
+                ]
+            ];
+
+            // 4. Crear la Cookie (Válida por 24 horas = 1440 minutos)
+            // Importante: path '/' para que el frontend la pueda leer
+            $cookie = cookie(
+                name: 'auth_data',                         // Nombre de la cookie
+                value: json_encode($frontendData),  // Valor
+                minutes: 1440,                             // Minutos
+                path: '/',                                 // Path (Importante para que el frontend la vea)
+                domain: null,                              // Domain (null = automático)
+                secure: false,                             // Secure (false para local, true para prod si usas https)
+                httpOnly: false                            // HttpOnly (FALSE importante para que JS pueda leerla)
+            );
+
+            // 5. Redirigir al Frontend con la cookie pegada
+            // Usamos la variable de entorno o un fallback
+            $frontendUrl = config('app.frontend_url');
+
+            return redirect($frontendUrl . '/academico/dashboard')->withCookie($cookie);
 
         } catch (Exception $e) {
             Log::error('Error en callback de Google: ' . $e->getMessage());
-            
-            return response()->json([
-                'status' => 'Error',
-                'message' => 'No se pudo iniciar sesión con Google.',
-                'debug_error' => $e->getMessage()
-            ], 500);
+
+            // Si falla, redirigir al login del frontend con un error
+            $frontendUrl = config('app.frontend_url');
+            return redirect($frontendUrl . '/login?error=auth_failed');
         }
     }
 }
