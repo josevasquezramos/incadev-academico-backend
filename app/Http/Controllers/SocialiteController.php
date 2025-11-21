@@ -40,15 +40,15 @@ class SocialiteController extends Controller
             } else {
                 // --- REGISTRO (Usuario nuevo) ---
                 $user = User::create([
-                    'name'     => $googleUser->getName(),
-                    'email'    => $googleUser->getEmail(),
-                    'avatar'   => $googleUser->getAvatar(),
+                    'name' => $googleUser->getName(),
+                    'email' => $googleUser->getEmail(),
+                    'avatar' => $googleUser->getAvatar(),
                     'password' => Hash::make(Str::random(24)),
                     'fullname' => null,
-                    'dni'      => null, 
-                    'phone'    => null, 
+                    'dni' => null,
+                    'phone' => null,
                 ]);
-                $user->assignRole('student'); 
+                $user->assignRole('student');
             }
 
             // 2. Crear Token Sanctum
@@ -68,21 +68,21 @@ class SocialiteController extends Controller
 
             // 4. Crear la Cookie (Válida por 24 horas = 1440 minutos)
             // Importante: path '/' para que el frontend la pueda leer
-            $cookie = cookie(
-                name: 'auth_data',                         // Nombre de la cookie
-                value: json_encode($frontendData),  // Valor
-                minutes: 1440,                             // Minutos
-                path: '/',                                 // Path (Importante para que el frontend la vea)
-                domain: null,                              // Domain (null = automático)
-                secure: false,                             // Secure (false para local, true para prod si usas https)
-                httpOnly: false                            // HttpOnly (FALSE importante para que JS pueda leerla)
+            setcookie(
+                'auth_data',                 // Nombre
+                json_encode($frontendData),  // Valor
+                time() + (60 * 60 * 24),     // Expiración (Unix timestamp)
+                '/',                         // Path
+                "",                          // Domain (vacío = actual)
+                app()->isProduction(),       // Secure (HTTPS en prod)
+                false                        // HttpOnly
             );
 
             // 5. Redirigir al Frontend con la cookie pegada
             // Usamos la variable de entorno o un fallback
             $frontendUrl = config('app.frontend_url');
 
-            return redirect($frontendUrl . '/academico/dashboard')->withCookie($cookie);
+            return redirect($frontendUrl . '/academico/dashboard');
 
         } catch (Exception $e) {
             Log::error('Error en callback de Google: ' . $e->getMessage());
