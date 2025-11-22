@@ -69,13 +69,13 @@ class SocialiteController extends Controller
             // 4. Crear la Cookie (Válida por 24 horas = 1440 minutos)
             // Importante: path '/' para que el frontend la pueda leer
             setcookie(
-                'auth_data',                 // Nombre
-                json_encode($frontendData),  // Valor
-                time() + (60 * 60 * 24),     // Expiración (Unix timestamp)
-                '/',                         // Path
-                "",                          // Domain (vacío = actual)
-                app()->isProduction(),       // Secure (HTTPS en prod)
-                false                        // HttpOnly
+                name: 'auth_data',                              // Nombre
+                value: json_encode($frontendData),       // Valor
+                expires_or_options: time() + (60 * 60 * 24),    // Expiración (Unix timestamp)
+                path: '/',                                      // Path
+                domain: "",                                     // Domain (vacío = actual)
+                secure: app()->isProduction(),                  // Secure (HTTPS en prod)
+                httponly: false                                 // HttpOnly
             );
 
             // 5. Redirigir al Frontend con la cookie pegada

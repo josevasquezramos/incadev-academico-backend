@@ -155,6 +155,65 @@ class AuthController extends Controller
         ], 404);
     }
 
+    /**
+     * Permite al usuario logueado ingresar su DNI y actualizar su fullname,
+     * solo si el campo DNI todavía está vacío.
+     */
+    public function updateDniAndFullname(Request $request): JsonResponse
+    {
+        /** @var User $user */
+        $user = Auth::user();
+
+        // 1. Verificar si el usuario ya tiene un DNI establecido
+        if (!empty($user->dni)) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Ya tiene un DNI registrado. No se permite la actualización.'
+            ], 403); // Forbidden
+        }
+
+        // 2. Validar el DNI de entrada (debe ser único globalmente, ya que no tiene uno)
+        $validator = Validator::make($request->all(), [
+            'dni' => 'required|string|digits:8|unique:users,dni',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['status' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $dni = $request->input('dni');
+
+        // 3. Obtener el nombre completo desde la API externa
+        $fullname = $this->getFullNameFromDNI($dni);
+
+        if (!$fullname) {
+            return response()->json([
+                'status' => false,
+                'message' => 'No se pudo validar el DNI proporcionado o no es válido.'
+            ], 400); // Bad Request
+        }
+
+        try {
+            // 4. Actualizar el usuario
+            $user->dni = $dni;
+            $user->fullname = $fullname;
+            $user->save();
+
+            // 5. Devolver la respuesta de éxito
+            return response()->json([
+                'status' => true,
+                'message' => 'DNI y nombre completo actualizados exitosamente.',
+                'user' => $user->only(['id', 'name', 'email', 'dni', 'fullname']) // Devuelve solo campos relevantes
+            ], 200);
+
+        } catch (\Throwable $th) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Error interno al guardar la información.',
+                'error' => $th->getMessage()
+            ], 500);
+        }
+    }
 
     /**
      * Método privado para interactuar con la API de apiperu.dev

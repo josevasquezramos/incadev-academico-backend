@@ -22,6 +22,8 @@ Route::post('/get-fullname-by-dni', [AuthController::class, 'getFullnameByDni'])
 
 Route::middleware('auth:sanctum')->group(function () {
 
+    Route::post('/update-dni-and-fullname', [AuthController::class, 'updateDniAndFullname']);
+
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::prefix('available-groups')->group(function () {
