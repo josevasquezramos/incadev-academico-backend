@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use IncadevUns\CoreDomain\Models\Course;
+use IncadevUns\CoreDomain\Models\CourseVersion;
 
 class MarketingController extends Controller
 {
@@ -35,5 +37,42 @@ class MarketingController extends Controller
                 'total' => $students->total(),
             ],
         ]);
+    }
+
+    /**
+     * Método para devolver la lista de cursos.
+     */
+    public function courses(Request $request): JsonResponse
+    {
+        // Verificación de Permisos
+        if (!$request->user()->hasRole('marketing')) {
+            return response()->json(['message' => 'Forbidden. Marketing role required.'], 403);
+        }
+
+        // Query: Listar cursos
+        // Puedes agregar ->orderBy('created_at', 'desc') si deseas los más recientes primero
+        $courses = Course::query()
+            ->paginate($request->get('per_page', 15));
+
+        return response()->json($courses);
+    }
+
+    /**
+     * Método para devolver la lista de versiones, indicando el curso.
+     */
+    public function versions(Request $request): JsonResponse
+    {
+        // Verificación de Permisos
+        if (!$request->user()->hasRole('marketing')) {
+            return response()->json(['message' => 'Forbidden. Marketing role required.'], 403);
+        }
+
+        // Query: Listar versiones CON su curso padre
+        // Asumimos que el modelo CourseVersion existe en el mismo namespace
+        $versions = CourseVersion::query()
+            ->with('course')
+            ->paginate($request->get('per_page', 15));
+
+        return response()->json($versions);
     }
 }

@@ -18,10 +18,9 @@ Route::post('/auth/login', [AuthController::class, 'login']);
 
 Route::post('/auth/register', [AuthController::class, 'register']);
 
-Route::post('/get-fullname-by-dni', [AuthController::class, 'getFullnameByDni']);
-
 Route::middleware('auth:sanctum')->group(function () {
 
+    Route::post('/get-fullname-by-dni', [AuthController::class, 'getFullnameByDni']);
     Route::post('/update-dni-and-fullname', [AuthController::class, 'updateDniAndFullname']);
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -85,6 +84,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::prefix('marketing')->group(function () {
         Route::get('/students', [MarketingController::class, 'students']);
+        Route::get('/courses', [MarketingController::class, 'courses']);
+        Route::get('/versions', [MarketingController::class, 'versions']);
     });
 
     Route::prefix('export')->group(function () {
