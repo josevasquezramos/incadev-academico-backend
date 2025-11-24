@@ -199,15 +199,29 @@
             </div>
             <table class="signature-table">
                 <tr>
+                    @php
+                        // Obtener director asignado en el certificado
+                        $director = $certificate->director ?? null;
+
+                        // Firma (ruta web) — usa default si no hay
+                        $signatureUrl = $director?->signature 
+                            ? $director->signature
+                            : public_path('images/certificate/signature.png'); // default local
+
+                        // Nombre del director — usa default si no hay
+                        $directorName = $director?->name 
+                            ? $director->name
+                            : 'GRADO NOMBRE PRESIDENTE';
+
+                        // Cargo — fijo o configurable
+                        $directorTitle = 'Director de INCADEV';
+                    @endphp
                     <td class="signature-column">
+                        <img src="{{ $signatureUrl }}" alt="Firma" class="signature-image">
 
-                        {{-- TODO: Obtener firma desde la base de datos --}}
-
-                        <img src="{{ public_path('images/certificate/signature.png') }}" alt="Firma"
-                            class="signature-image">
                         <div class="signature-line"></div>
-                        <div class="signature-name">GRADO NOMBRE PRESIDENTE</div>
-                        <div class="signature-title">Director de INCADEV</div>
+                        <div class="signature-name">{{ $directorName }}</div>
+                        <div class="signature-title">{{ $directorTitle }}</div>
                     </td>
                     <td class="signature-column">
                         <img src="{{ public_path('images/certificate/isologotipo.png') }}" alt="Logo"

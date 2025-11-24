@@ -13,6 +13,7 @@ use IncadevUns\CoreDomain\Models\EnrollmentResult;
 use IncadevUns\CoreDomain\Models\Certificate;
 use IncadevUns\CoreDomain\Models\AcademicSetting;
 use Illuminate\Support\Facades\DB;
+use IncadevUns\CoreDomain\Models\InstituteDirector;
 
 class GroupCompletionService
 {
@@ -39,10 +40,10 @@ class GroupCompletionService
                 'grades.exam',
                 'attendances.classSession'
             ])
-            ->where('group_id', $group->id)
-            ->where('payment_status', PaymentStatus::Paid)
-            ->where('academic_status', EnrollmentAcademicStatus::Active)
-            ->get();
+                ->where('group_id', $group->id)
+                ->where('payment_status', PaymentStatus::Paid)
+                ->where('academic_status', EnrollmentAcademicStatus::Active)
+                ->get();
 
             $totalStudents = $enrollments->count();
             $results = [];
@@ -51,13 +52,13 @@ class GroupCompletionService
             foreach ($enrollments as $enrollment) {
                 // Calcular nota final (promedio de todas las notas)
                 $finalGrade = $this->calculateFinalGrade($enrollment);
-                
+
                 // Calcular porcentaje de asistencia
                 $attendancePercentage = $this->calculateAttendancePercentage($enrollment, $group);
-                
+
                 // Determinar estado del resultado
                 $status = $this->determineResultStatus($finalGrade, $attendancePercentage, $minPassingGrade, $maxAbsencePercentage);
-                
+
                 // Crear o actualizar EnrollmentResult
                 $enrollmentResult = EnrollmentResult::updateOrCreate(
                     ['enrollment_id' => $enrollment->id],
@@ -114,7 +115,7 @@ class GroupCompletionService
     private function calculateFinalGrade(Enrollment $enrollment): float
     {
         $grades = $enrollment->grades;
-        
+
         if ($grades->isEmpty()) {
             return 0.0;
         }
@@ -136,7 +137,7 @@ class GroupCompletionService
     private function calculateAttendancePercentage(Enrollment $enrollment, Group $group): float
     {
         $totalClasses = $group->classSessions->count();
-        
+
         if ($totalClasses === 0) {
             return 100.0; // Si no hay clases, se considera 100% de asistencia
         }
@@ -151,7 +152,7 @@ class GroupCompletionService
         $totalAbsences = $absentCount + $classesWithoutAttendance;
 
         $attendancePercentage = (($totalClasses - $totalAbsences) / $totalClasses) * 100;
-        
+
         return max(0, round($attendancePercentage, 2));
     }
 
@@ -159,9 +160,9 @@ class GroupCompletionService
      * Determinar el estado del resultado
      */
     private function determineResultStatus(
-        float $finalGrade, 
-        float $attendancePercentage, 
-        int $minPassingGrade, 
+        float $finalGrade,
+        float $attendancePercentage,
+        int $minPassingGrade,
         float $maxAbsencePercentage
     ): EnrollmentResultStatus {
         $minAttendancePercentage = 100 - $maxAbsencePercentage;
@@ -180,14 +181,17 @@ class GroupCompletionService
      */
     private function generateCertificate(Enrollment $enrollment, Group $group, EnrollmentResult $result): void
     {
-        // Verificar si ya existe un certificado
         $existingCertificate = Certificate::where('user_id', $enrollment->user_id)
             ->where('group_id', $group->id)
             ->first();
 
         if ($existingCertificate) {
-            return; // Ya existe, no generar duplicado
+            return;
         }
+
+        // Obtener director (opcional)
+        $director = InstituteDirector::orderBy('id', 'desc')->first();
+        $directorId = $director ? $director->id : null;
 
         $extraData = [
             'course_name' => $group->courseVersion->course->name,
@@ -202,12 +206,12 @@ class GroupCompletionService
                 ->count(),
         ];
 
-        // Crear el certificado sin asignar ID manualmente
         Certificate::create([
             'uuid' => \Illuminate\Support\Str::uuid(),
             'user_id' => $enrollment->user_id,
             'group_id' => $group->id,
             'issue_date' => now(),
+            'director_id' => $directorId, // <-- NUEVO
             'extra_data_json' => $extraData,
         ]);
     }
